@@ -58,7 +58,8 @@ section.active{display:flex}
 .display{font-family:'Bungee',cursive;line-height:1.02;letter-spacing:.5px}
 
 /* ---------- HOME ---------- */
-.brand{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.brand-ico{width:52px;height:52px;flex:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
 .brand .ball-ico{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 32% 30%,#ffa068,var(--orange) 55%,var(--orange-deep));position:relative;box-shadow:0 4px 10px rgba(0,0,0,.5);flex:none}
 .brand .ball-ico::before,.brand .ball-ico::after{content:"";position:absolute;inset:0;border-radius:50%}
 .brand .ball-ico::before{border-left:2px solid rgba(30,16,8,.55);left:46%}
@@ -328,7 +329,7 @@ h1 .killer{color:var(--orange)}
 
   <!-- HOME -->
   <section id="screen-home" class="active">
-    <div class="brand"><div class="ball-ico"></div><h1 class="display">CRAVINGS<br><span class="killer">KILLER</span></h1></div>
+    <div class="brand"><img class="brand-ico" src="brand-mark.png" alt=""><h1 class="display">CRAVINGS<br><span class="killer">KILLER</span></h1></div>
     <p class="tag">Craving something? Give me 60 seconds and two thumbs.</p>
 
     <div class="stat-row">
