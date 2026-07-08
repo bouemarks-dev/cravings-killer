@@ -59,6 +59,28 @@ section{display:none;flex:1;flex-direction:column;padding:calc(env(safe-area-ins
 section.active{display:flex}
 .display{font-family:'Bungee',cursive;line-height:1.02;letter-spacing:.5px}
 
+/* ---------- SPLASH ---------- */
+#splash{
+  position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(900px 500px at 50% 30%,rgba(163,230,53,.08),transparent 60%),#0b1013;
+  transition:opacity .45s;
+}
+#splash.done{opacity:0;pointer-events:none}
+#splash .sp-mark{width:150px;height:150px;animation:slam .7s cubic-bezier(.2,1.4,.35,1) both;filter:drop-shadow(0 0 40px rgba(163,230,53,.35))}
+@keyframes slam{
+  0%{transform:scale(2.8) rotate(-14deg);opacity:0}
+  55%{transform:scale(.92) rotate(2deg);opacity:1}
+  75%{transform:scale(1.05) rotate(-1deg)}
+  100%{transform:scale(1) rotate(0)}
+}
+#splash .sp-name{font-family:'Bungee';font-size:30px;margin-top:22px;color:var(--cream);animation:spfade .5s .45s both}
+#splash .sp-name b{color:var(--acc);font-weight:400}
+#splash .sp-tag{font-family:'Rubik';font-weight:700;font-size:13px;letter-spacing:2px;color:var(--cream-dim);text-transform:uppercase;margin-top:10px;animation:spfade .5s .6s both}
+@keyframes spfade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+#splash .sp-bar{width:150px;height:4px;border-radius:2px;background:var(--line);margin-top:30px;overflow:hidden;animation:spfade .4s .5s both}
+#splash .sp-bar i{display:block;height:100%;width:100%;border-radius:2px;background:linear-gradient(90deg,var(--acc-deep),var(--acc));transform-origin:left;transform:scaleX(0);animation:spload 1s .55s ease-out forwards}
+@keyframes spload{to{transform:scaleX(1)}}
+
 /* ---------- HOME ---------- */
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
 .brand-ico{width:52px;height:52px;flex:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
@@ -329,6 +351,12 @@ h1 .killer{color:var(--acc)}
 </style>
 </head>
 <body>
+<div id="splash">
+  <img class="sp-mark" src="brand-mark.png" alt="">
+  <div class="sp-name">CRAVINGS <b>KILLER</b></div>
+  <div class="sp-tag">Get out of your head</div>
+  <div class="sp-bar"><i></i></div>
+</div>
 <div id="app">
 
   <!-- HOME -->
@@ -1459,6 +1487,9 @@ function confetti(){
 }
 if(GAMES[S.lastGame])gameId=S.lastGame;
 renderPicker();
+const hideSplash=()=>{splash.classList.add("done");setTimeout(()=>splash.remove(),500);};
+setTimeout(hideSplash,1750);
+splash.addEventListener("pointerdown",hideSplash);
 btnMute.textContent=S.muted?"🔇":"🔊";
 btnMute.addEventListener("click",()=>{S.muted=!S.muted;save();btnMute.textContent=S.muted?"🔇":"🔊";if(!S.muted)SFX.pop();buzz(12);});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
