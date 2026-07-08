@@ -164,6 +164,12 @@ h1 .killer{color:var(--acc)}
   background:rgba(255,93,93,.05);border-radius:0 10px 10px 0;
 }
 .fact-line b{color:var(--red);letter-spacing:1px;font-size:10.5px}
+.fact-line.fact-big{
+  margin-top:26px;padding:18px 20px;border-left-width:4px;border-radius:0 18px 18px 0;
+  font-size:17px;line-height:1.6;color:var(--cream);font-weight:500;
+  background:linear-gradient(160deg,rgba(255,93,93,.10),rgba(255,93,93,.04));
+}
+.fact-line.fact-big b{font-size:13px;letter-spacing:2px}
 .fact-card{
   max-width:320px;margin:0 auto 16px;text-align:left;
   background:linear-gradient(160deg,#1d1113,#141011);border:1px solid rgba(255,93,93,.3);
@@ -444,7 +450,7 @@ h1 .killer{color:var(--acc)}
       <p class="rate-sub">Gut answer. 0 = nothing, 10 = unbearable.</p>
       <div class="scale" id="scaleBefore"></div>
       <div class="scale-caps"><span>😌 Meh</span><span>Unbearable 🥵</span></div>
-      <p class="fact-line" id="rateFact" style="margin-top:18px"></p>
+      <p class="fact-line fact-big" id="rateFact"></p>
     </div>
     <button class="back-link" id="rateBack">← Back</button>
   </section>
@@ -990,7 +996,10 @@ function buildScale(el,cb){
   el.innerHTML="";
   for(let i=0;i<=10;i++){
     const b=document.createElement("button");
-    b.textContent=i; if(i>=7) b.classList.add("hot");
+    b.textContent=i;
+    const h=145-i*14.5; /* heat ramp: 0 = calm green → 10 = red */
+    b.style.color=`hsl(${h},75%,62%)`;
+    b.style.borderColor=`hsla(${h},70%,55%,.35)`;
     b.addEventListener("click",()=>{buzz(15);cb(i);});
     el.appendChild(b);
   }
