@@ -22,8 +22,10 @@
   --line:#1f2e2b;         /* painted court line, dimmed */
   --cream:#f4ecdd;
   --cream-dim:#b9b2a3;
-  --orange:#ff7a2f;       /* basketball */
+  --orange:#ff7a2f;       /* basketball & heat */
   --orange-deep:#e2591a;
+  --acc:#a3e635;          /* brand toxic green */
+  --acc-deep:#6ea016;
   --mint:#3df0b0;         /* win */
   --red:#ff5d5d;
   --gold:#ffc94d;
@@ -45,7 +47,7 @@ body::before{
   background:
     radial-gradient(circle at 50% -18%, transparent 34%, var(--line) 34.4%, var(--line) 35%, transparent 35.4%),
     radial-gradient(circle at 50% 118%, transparent 30%, var(--line) 30.4%, var(--line) 31%, transparent 31.4%),
-    radial-gradient(1200px 600px at 50% -10%, rgba(255,122,47,.08), transparent 60%),
+    radial-gradient(1200px 600px at 50% -10%, rgba(163,230,53,.07), transparent 60%),
     linear-gradient(180deg,#101917 0%, var(--ink) 45%);
 }
 body::after{
@@ -65,7 +67,7 @@ section.active{display:flex}
 .brand .ball-ico::before{border-left:2px solid rgba(30,16,8,.55);left:46%}
 .brand .ball-ico::after{border-top:2px solid rgba(30,16,8,.55);top:46%}
 h1.display{font-size:clamp(26px,7.4vw,34px)}
-h1 .killer{color:var(--orange)}
+h1 .killer{color:var(--acc)}
 .tag{color:var(--cream-dim);font-size:13.5px;margin:6px 0 18px}
 .stat-row{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:10px;margin-bottom:16px}
 .stat{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--radius);padding:14px 12px;position:relative;overflow:hidden}
@@ -79,15 +81,15 @@ h1 .killer{color:var(--orange)}
 .stat.surfs .num{color:var(--sky)}
 .big-btn{
   display:block;width:100%;border:none;cursor:pointer;
-  font-family:'Bungee';font-size:clamp(19px,5.6vw,24px);color:#1a0d04;text-align:center;
-  background:linear-gradient(160deg,#ffa068,var(--orange) 45%,var(--orange-deep));
+  font-family:'Bungee';font-size:clamp(19px,5.6vw,24px);color:#0c1403;text-align:center;
+  background:linear-gradient(160deg,#cdf56e,var(--acc) 45%,var(--acc-deep));
   border-radius:26px;padding:22px 16px;position:relative;
-  box-shadow:0 10px 0 #8f3a10,0 18px 34px rgba(255,122,47,.28);
+  box-shadow:0 10px 0 #45690b,0 18px 34px rgba(163,230,53,.25);
   transition:transform .08s,box-shadow .08s;margin-bottom:8px;
 }
-.big-btn:active{transform:translateY(7px);box-shadow:0 3px 0 #8f3a10,0 8px 18px rgba(255,122,47,.25)}
+.big-btn:active{transform:translateY(7px);box-shadow:0 3px 0 #45690b,0 8px 18px rgba(163,230,53,.22)}
 .big-btn small{display:block;font-family:'Rubik';font-weight:700;font-size:12px;letter-spacing:1.5px;margin-top:4px;opacity:.75}
-.pulse-ring{position:absolute;inset:-3px;border-radius:29px;border:2px solid rgba(255,122,47,.6);animation:ring 1.8s ease-out infinite;pointer-events:none}
+.pulse-ring{position:absolute;inset:-3px;border-radius:29px;border:2px solid rgba(163,230,53,.6);animation:ring 1.8s ease-out infinite;pointer-events:none}
 @keyframes ring{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(1.08)}}
 .surf-btn{
   display:block;width:100%;background:linear-gradient(160deg,#10222b,#0d1a21);border:1.5px solid #1e4254;
@@ -115,7 +117,7 @@ h1 .killer{color:var(--orange)}
 .rate-sub{color:var(--cream-dim);font-size:14px;margin-bottom:16px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
 .chip{background:var(--ink-2);border:1.5px solid var(--line);color:var(--cream-dim);border-radius:999px;padding:9px 14px;font-family:'Rubik';font-weight:700;font-size:13px;cursor:pointer;transition:all .12s}
-.chip.sel{border-color:var(--orange);color:var(--cream);background:linear-gradient(160deg,#241611,#161311)}
+.chip.sel{border-color:var(--acc);color:var(--cream);background:linear-gradient(160deg,#1a2311,#12170c)}
 .chip:active{transform:scale(.94)}
 .chip.sm{padding:7px 11px;font-size:12px}
 #whyInput{
@@ -146,7 +148,7 @@ h1 .killer{color:var(--orange)}
 .mode-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 6px}
 .mode-btn{font-family:'Bungee';font-size:12.5px;padding:13px 6px;border-radius:14px;background:var(--ink-2);border:1.5px solid var(--line);color:var(--cream-dim);cursor:pointer}
 .mode-btn small{display:block;font-family:'Rubik';font-weight:700;font-size:10px;margin-top:4px;opacity:.7;letter-spacing:.5px}
-.mode-btn.sel{border-color:var(--orange);color:var(--cream);background:linear-gradient(160deg,#241611,#161311)}
+.mode-btn.sel{border-color:var(--acc);color:var(--cream);background:linear-gradient(160deg,#1a2311,#12170c)}
 .mode-btn:active{transform:scale(.97)}
 .g-ko{font-size:10.5px;color:var(--gold);margin-top:3px;font-weight:700}
 
@@ -158,7 +160,7 @@ h1 .killer{color:var(--orange)}
 .hud .clock.low{color:var(--red);animation:blink .5s steps(2) infinite}
 @keyframes blink{50%{opacity:.35}}
 .tbar{height:6px;background:var(--line);border-radius:3px;margin:0 18px 6px;overflow:hidden}
-.tbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--mint),var(--orange));border-radius:3px;transform-origin:left;transition:transform .18s}
+.tbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--mint),var(--acc));border-radius:3px;transform-origin:left;transition:transform .18s}
 .tbar.hp{height:12px;border-radius:6px;border:1px solid rgba(255,93,93,.35)}
 .tbar.hp i{background:linear-gradient(90deg,#8f1d1d,var(--red) 55%,#ff8f6b);border-radius:6px}
 #koFlash{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:25;background:rgba(13,20,19,.8);backdrop-filter:blur(3px)}
@@ -173,10 +175,10 @@ h1 .killer{color:var(--orange)}
 .zone.L{left:0}.zone.R{right:0}
 .zone .tapcue{
   position:absolute;bottom:3.5%;left:50%;transform:translateX(-50%);
-  font-family:'Bungee';font-size:15px;letter-spacing:1px;color:var(--mint);text-align:center;
+  font-family:'Bungee';font-size:15px;letter-spacing:1px;color:var(--acc);text-align:center;
   opacity:0;transition:opacity .15s;pointer-events:none;white-space:nowrap;
 }
-.zone .tapcue .thumb{display:block;font-size:34px;animation:bob .55s ease-in-out infinite alternate;filter:drop-shadow(0 0 10px rgba(61,240,176,.5))}
+.zone .tapcue .thumb{display:block;font-size:34px;animation:bob .55s ease-in-out infinite alternate;filter:drop-shadow(0 0 10px rgba(163,230,53,.55))}
 @keyframes bob{from{transform:translateY(0)}to{transform:translateY(-9px)}}
 .zone.go .tapcue{opacity:1}
 .zone.flash-bad{animation:badflash .22s}
@@ -187,7 +189,7 @@ h1 .killer{color:var(--orange)}
 #countdown{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;background:rgba(13,20,19,.72);backdrop-filter:blur(3px)}
 #cdWhy{margin-top:22px;max-width:300px;padding:0 24px;text-align:center;color:var(--cream);font-size:15px;font-weight:700;line-height:1.5}
 #cdWhy:empty{display:none}
-#countdown .num{font-family:'Bungee';font-size:100px;color:var(--orange);animation:cd .9s ease-in-out infinite}
+#countdown .num{font-family:'Bungee';font-size:100px;color:var(--acc);animation:cd .9s ease-in-out infinite}
 @keyframes cd{0%{transform:scale(.6);opacity:0}25%{transform:scale(1.1);opacity:1}80%{transform:scale(1);opacity:1}100%{opacity:0}}
 
 /* hoops */
@@ -642,11 +644,11 @@ function buildShareCard(){
   const w1=c.measureText(t1).width,w2=c.measureText(t2).width;
   const tx=(1080-w1-w2)/2;
   c.fillStyle="#f4ecdd";c.fillText(t1,tx,150);
-  c.fillStyle="#ff7a2f";c.fillText(t2,tx+w1,150);
+  c.fillStyle="#a3e635";c.fillText(t2,tx+w1,150);
 
   c.textAlign="center";
-  c.font="290px Bungee";c.fillStyle="#ff7a2f";
-  c.shadowColor="rgba(255,122,47,.35)";c.shadowBlur=60;
+  c.font="290px Bungee";c.fillStyle="#a3e635";
+  c.shadowColor="rgba(163,230,53,.35)";c.shadowBlur=60;
   c.fillText(String(big),540,510);
   c.shadowBlur=0;
   c.font="700 34px Rubik";c.fillStyle="#b9b2a3";
@@ -674,7 +676,7 @@ function buildShareCard(){
   c.fillStyle="#3df0b0";c.fillText("● After 60 seconds",cx0+170,1050);
 
   c.textAlign="center";
-  const stats=[["🔥 "+S.streak,"DAY STREAK","#ff7a2f"],[winPct+"%","WIN RATE","#3df0b0"],["−"+Math.abs(avgDrop).toFixed(1),"AVG DROP","#ffc94d"]];
+  const stats=[["🔥 "+S.streak,"DAY STREAK","#a3e635"],[winPct+"%","WIN RATE","#3df0b0"],["−"+Math.abs(avgDrop).toFixed(1),"AVG DROP","#ffc94d"]];
   stats.forEach((s,i)=>{
     const x=200+i*340;
     c.font="56px Bungee";c.fillStyle=s[2];c.fillText(s[0],x,1170);
