@@ -144,6 +144,18 @@ h1 .killer{color:var(--acc)}
 .chip.sel{border-color:var(--acc);color:var(--cream);background:linear-gradient(160deg,#1a2311,#12170c)}
 .chip:active{transform:scale(.94)}
 .chip.sm{padding:7px 11px;font-size:12px}
+.fact-line{
+  border-left:3px solid var(--red);padding:8px 12px;margin:2px 0 16px;
+  font-size:12.5px;line-height:1.5;color:var(--cream-dim);
+  background:rgba(255,93,93,.05);border-radius:0 10px 10px 0;
+}
+.fact-line b{color:var(--red);letter-spacing:1px;font-size:10.5px}
+.fact-card{
+  max-width:320px;margin:0 auto 16px;text-align:left;
+  background:linear-gradient(160deg,#1d1113,#141011);border:1px solid rgba(255,93,93,.3);
+  border-radius:16px;padding:12px 16px;font-size:13px;line-height:1.55;color:var(--cream-dim);
+}
+.fact-card b{color:var(--red);letter-spacing:1.5px;font-size:10.5px}
 #whyInput{
   width:100%;min-height:120px;resize:none;background:var(--ink-2);border:1.5px solid var(--line);
   border-radius:var(--radius);color:var(--cream);font-family:'Rubik';font-size:15px;line-height:1.5;padding:14px 16px;
@@ -402,6 +414,7 @@ h1 .killer{color:var(--acc)}
   <section id="screen-rate">
     <h2 class="display rate-head">WHAT'S CALLING YOU?</h2>
     <div class="chips" id="typeChips"></div>
+    <p class="fact-line" id="rateFact"></p>
     <div class="mile-h">What triggered it? (optional)</div>
     <div class="chips" id="trigChips"></div>
     <h2 class="display rate-head" style="margin-top:0;font-size:clamp(18px,5.4vw,24px)">HOW BAD IS IT RIGHT NOW?</h2>
@@ -497,6 +510,7 @@ h1 .killer{color:var(--acc)}
       </div>
       <div class="res-score" id="resScore">🏀 12 buckets</div>
       <p class="res-msg" id="resMsg"></p>
+      <div class="fact-card" id="resFact"></div>
       <div id="resMile"></div>
       <button class="ins-btn" id="btnShareKill">📤 SHARE THIS KILL</button>
       <button class="big-btn" data-nav="screen-home" style="margin-top:6px">DONE<small>BACK TO THE STATS</small></button>
@@ -580,6 +594,68 @@ const TRIGGERS={
   social:{ico:"🍻",name:"Social"},
   hungry:{ico:"🍽",name:"Hungry"},
 };
+const FACTS={
+food:[
+  "Sugar fires the same reward circuits as addictive drugs — and snack companies engineer the exact 'bliss point' to keep you hooked.",
+  "Ultra-processed food is built to dodge your fullness signals — people eat about 500 extra calories a day on it without noticing.",
+  "'Vanishing caloric density': chips are designed to melt fast so your brain under-counts the calories.",
+  "One sugary drink a day adds up to over 14 kg of pure sugar a year.",
+  "The sugar crash 90 minutes after a treat is what orders the next one. The loop is the product.",
+  "The average adult eats roughly a carry-on suitcase of added sugar every year.",
+  "Junk food dulls your taste buds within weeks — real food starts tasting bland, so you reach for stronger hits.",
+  "Scientists believe gut microbes that thrive on junk push cravings for more junk. Ask who's actually hungry.",
+  "About 1 in 10 adults now lives with type 2 diabetes — most cases driven by diet.",
+  "Food companies spend over $10 billion a year marketing cravings at you. Killing this one costs nothing.",
+],
+smoke:[
+  "Each cigarette costs you around 20 minutes of life. A pack is a lost day.",
+  "Nicotine hits your brain in about 10 seconds — that speed is the trap, not the pleasure.",
+  "Cigarette smoke carries 7,000+ chemicals; at least 70 are known to cause cancer.",
+  "Tobacco kills more than 8 million people every year — including over a million non-smokers.",
+  "Up to half of long-term smokers are killed by their habit. A coin flip.",
+  "Tobacco companies added ammonia to cigarettes to speed up nicotine delivery. The addiction was engineered.",
+  "Vape aerosol is not water vapour — it can carry nickel, tin and lead into your lungs.",
+  "20 minutes after your last smoke your heart rate drops; one year in, heart-attack risk halves. Your body wants out.",
+  "Smoking shreds collagen — it ages your face years ahead of schedule.",
+  "In Australia, a pack-a-day habit burns $14,000+ a year. A holiday, annually, up in smoke.",
+],
+drink:[
+  "Alcohol is a Group 1 carcinogen — the same classification as tobacco and asbestos.",
+  "The WHO's official position: there is no safe amount of alcohol.",
+  "Alcohol is linked to at least 7 cancers, including breast and bowel.",
+  "Around 3 million deaths a year trace back to alcohol.",
+  "A nightcap wrecks your REM sleep — you pass out faster but rest worse, even after one drink.",
+  "Your liver treats alcohol as poison and stops burning fat until it's cleared. That's the beer belly.",
+  "Hangxiety is chemistry: alcohol rebounds your stress hormones the morning after.",
+  "Even 1–2 drinks a day is associated with measurable brain shrinkage.",
+  "'Red wine is heart-healthy' came from flawed studies — modern research has largely dismantled it.",
+  "Every craving you outlast is a night of real sleep, a clear morning, and money still in your pocket.",
+],
+scroll:[
+  "2.5 hours a day on social media is 38 full days a year. A month of your life, annually.",
+  "Infinite scroll was copied from slot machines — even its inventor says he regrets building it.",
+  "The average user touches their phone about 2,600 times a day.",
+  "Just having your phone visible measurably drains your thinking — even face-down and silent.",
+  "After a scroll interruption it takes about 23 minutes to fully refocus.",
+  "Entire teams are paid to maximise exactly one number: your minutes on the feed.",
+  "Facebook's first president admitted the platform was built to exploit human psychology.",
+  "Doomscrolling spikes stress hormones and is linked to anxiety and worse sleep.",
+  "Late-night screens suppress melatonin and can push your sleep back by an hour.",
+  "The feed never ends. Your evening does.",
+],
+other:[
+  "Dopamine spikes for the anticipation, not the reward — the craving writes cheques the treat can't cash.",
+  "Most cravings peak and pass within minutes — if you don't feed them.",
+  "Giving in doesn't end the loop. It trains tomorrow's craving to shout louder.",
+  "Every urge you outlast literally weakens the brain circuit behind it. This is training.",
+  "A visually demanding game can cut craving intensity by about 20%. That's why you're here.",
+  "HALT: hungry, angry, lonely, tired — the four amplifiers behind most cravings.",
+  "Willpower is overrated. Changing your response to the cue is what rewires the habit.",
+  "The average urge is shorter than an ad break.",
+  "Streaks aren't just numbers — unused brain pathways measurably fade.",
+  "The craving you don't feed tonight is the freedom you wake up with.",
+]};
+const randFact=t=>{const a=FACTS[t]||FACTS.other;return a[Math.floor(Math.random()*a.length)];};
 const MILESTONES=[
   {id:"c1",  ico:"🏀", lbl:"First kill",   test:s=>s.crushed>=1},
   {id:"c5",  ico:"💪", lbl:"5 crushed",    test:s=>s.crushed>=5},
@@ -598,8 +674,9 @@ const show=id=>{
   document.getElementById(id).classList.add("active");
   if(id==="screen-pick")renderPicker();
   if(id==="screen-insights")renderInsights();
-  if(id==="screen-rate"){curTrigger=null;renderTriggers();}
+  if(id==="screen-rate"){curTrigger=null;renderTriggers();showFact();}
 };
+function showFact(){rateFact.innerHTML="<b>☠️ FACT</b><br>"+randFact(curType);}
 document.querySelectorAll("[data-nav]").forEach(b=>b.addEventListener("click",()=>{show(b.dataset.nav);if(b.dataset.nav==="screen-home")renderHome();}));
 
 /* ---------- home ---------- */
@@ -839,7 +916,7 @@ let curType=S.lastType, curTrigger=null;
 function renderChips(){
   typeChips.innerHTML=Object.entries(TYPES).map(([k,t])=>
     `<button class="chip ${k===curType?"sel":""}" data-type="${k}">${t.ico} ${t.name}</button>`).join("");
-  typeChips.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{curType=c.dataset.type;S.lastType=curType;save();buzz(12);renderChips();}));
+  typeChips.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{curType=c.dataset.type;S.lastType=curType;save();buzz(12);renderChips();showFact();}));
 }
 renderChips();
 function renderTriggers(){
@@ -1402,7 +1479,8 @@ function fmtSurf(s){return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
 function startSurf(){
   clearInterval(surfTick);clearInterval(surfMsgTimer);clearInterval(breathTimer);clearTimeout(breathHalf);
   surfLeft=SURF_SECONDS;surfClock.textContent=fmtSurf(surfLeft);
-  const msgs=S.why?[SURF_MSGS[0],"🎯 Your why: "+S.why,...SURF_MSGS.slice(1)]:SURF_MSGS;
+  const base=S.why?[SURF_MSGS[0],"🎯 Your why: "+S.why,...SURF_MSGS.slice(1)]:[...SURF_MSGS];
+  const msgs=[base[0],base[1],"☠️ Fact: "+randFact(curType),...base.slice(2)];
   surfMsg.textContent=msgs[0];
   show("screen-surf");
   let mi=0;
@@ -1458,6 +1536,7 @@ function finishSession(){
     drop>=1?`Down ${drop} point${drop>1?"s":""}. Every point down is your brain unlearning the loop. Stack these wins.`:
     after===0?"Zero. Total shutout. 🧊":
     "It didn't budge this time — that's still data, and you still didn't give in. Drink a glass of water, take a 2-minute walk, try another game, or ride it out with a surf.";
+  resFact.innerHTML="<b>☠️ REMEMBER WHY YOU'RE KILLING IT</b><br>"+randFact(curType);
   resMile.innerHTML=fresh.map(m=>`<div class="toast-mile">${m.ico} Milestone unlocked: ${m.lbl}</div>`).join("");
   show("screen-result");
   if(won){confetti();SFX.win();}
