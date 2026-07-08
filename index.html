@@ -62,6 +62,8 @@ section.active{display:flex}
 /* ---------- HOME ---------- */
 .brand{display:flex;align-items:center;gap:12px;margin-bottom:4px}
 .brand-ico{width:52px;height:52px;flex:none;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6))}
+.mute-btn{margin-left:auto;width:42px;height:42px;flex:none;border-radius:50%;background:var(--ink-2);border:1.5px solid var(--line);font-size:17px;cursor:pointer;color:var(--cream)}
+.mute-btn:active{transform:scale(.92)}
 .brand .ball-ico{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 32% 30%,#ffa068,var(--orange) 55%,var(--orange-deep));position:relative;box-shadow:0 4px 10px rgba(0,0,0,.5);flex:none}
 .brand .ball-ico::before,.brand .ball-ico::after{content:"";position:absolute;inset:0;border-radius:50%}
 .brand .ball-ico::before{border-left:2px solid rgba(30,16,8,.55);left:46%}
@@ -331,7 +333,7 @@ h1 .killer{color:var(--acc)}
 
   <!-- HOME -->
   <section id="screen-home" class="active">
-    <div class="brand"><img class="brand-ico" src="brand-mark.png" alt=""><h1 class="display">CRAVINGS<br><span class="killer">KILLER</span></h1></div>
+    <div class="brand"><img class="brand-ico" src="brand-mark.png" alt=""><h1 class="display">CRAVINGS<br><span class="killer">KILLER</span></h1><button class="mute-btn" id="btnMute">🔊</button></div>
     <p class="tag">Craving something? Give me 60 seconds and two thumbs.</p>
 
     <div class="stat-row">
@@ -468,6 +470,7 @@ h1 .killer{color:var(--acc)}
       <div class="res-score" id="resScore">🏀 12 buckets</div>
       <p class="res-msg" id="resMsg"></p>
       <div id="resMile"></div>
+      <button class="ins-btn" id="btnShareKill">📤 SHARE THIS KILL</button>
       <button class="big-btn" data-nav="screen-home" style="margin-top:6px">DONE<small>BACK TO THE STATS</small></button>
       <button class="ghost-btn" id="btnAgain">STILL CRAVING? GO AGAIN ↺</button>
       <button class="ghost-btn surfy" id="btnSurfAfter">🌊 OR RIDE IT OUT — 10-MIN SURF</button>
@@ -481,12 +484,56 @@ h1 .killer{color:var(--acc)}
 "use strict";
 /* ---------- state & storage ---------- */
 const KEY="cravingsKiller.v1";
-const S = Object.assign({streak:0,lastDay:null,crushed:0,surfed:0,sessions:0,best:{},bestKO:{},milestones:[],log:[],lastType:"food",lastGame:"hoops",why:"",whyAsked:false,koMode:false},
+const S = Object.assign({streak:0,lastDay:null,crushed:0,surfed:0,sessions:0,best:{},bestKO:{},milestones:[],log:[],lastType:"food",lastGame:"hoops",why:"",whyAsked:false,koMode:false,muted:false},
   JSON.parse(localStorage.getItem(KEY)||"{}"));
 if(typeof S.best==="number") S.best={hoops:S.best};       /* migrate v1 numeric best */
 const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
 const today=()=>new Date().toISOString().slice(0,10);
 const buzz=ms=>{ if(navigator.vibrate) navigator.vibrate(ms); };
+
+/* ---------- sound engine (Web Audio, all synthesized — no files) ---------- */
+let AC=null;
+function ac(){
+  if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return null;}}
+  if(AC.state==="suspended")AC.resume();
+  return AC;
+}
+addEventListener("pointerdown",()=>ac(),{once:true});
+function tone(f,d,type,vol,f2,when){
+  const a=ac();if(!a||S.muted)return;
+  const t=a.currentTime+(when||0);
+  const o=a.createOscillator(),g=a.createGain();
+  o.type=type||"sine";o.frequency.setValueAtTime(f,t);
+  if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);
+  g.gain.setValueAtTime(vol||.15,t);
+  g.gain.exponentialRampToValueAtTime(.001,t+d);
+  o.connect(g).connect(a.destination);o.start(t);o.stop(t+d+.05);
+}
+function noiseBurst(d,freq,vol,when){
+  const a=ac();if(!a||S.muted)return;
+  const t=a.currentTime+(when||0), len=Math.floor(a.sampleRate*d);
+  const buf=a.createBuffer(1,len,a.sampleRate),ch=buf.getChannelData(0);
+  for(let i=0;i<len;i++)ch[i]=(Math.random()*2-1)*(1-i/len);
+  const src=a.createBufferSource();src.buffer=buf;
+  const flt=a.createBiquadFilter();flt.type="bandpass";flt.frequency.value=freq;flt.Q.value=.8;
+  const g=a.createGain();g.gain.setValueAtTime(vol||.2,t);
+  src.connect(flt);flt.connect(g);g.connect(a.destination);src.start(t);
+}
+const SFX={
+  swish(){noiseBurst(.18,2200,.22);tone(880,.12,"sine",.06,1320);},
+  thud(){tone(160,.12,"sine",.3,55);noiseBurst(.06,700,.16);},
+  pop(){tone(420,.07,"square",.1,880);noiseBurst(.05,3000,.14);},
+  save(){noiseBurst(.1,1200,.22);tone(300,.1,"triangle",.14,140);},
+  bonk(){tone(520,.16,"square",.13,180);},
+  combo(){[660,880,1100].forEach((f,i)=>tone(f,.09,"square",.08,null,i*.07));},
+  wrong(){tone(140,.18,"sawtooth",.1,90);},
+  tick(){tone(700,.05,"square",.07);},
+  go(){tone(520,.15,"square",.13,780);},
+  ko(){tone(90,.7,"sine",.35,45);noiseBurst(.4,500,.25);[440,554,659].forEach((f,i)=>tone(f,.3,"triangle",.1,null,.15+i*.1));},
+  win(){[523,659,784,1047].forEach((f,i)=>tone(f,.18,"triangle",.1,null,i*.09));},
+  chime(){tone(1047,.4,"sine",.1);tone(1319,.5,"sine",.07,null,.08);},
+};
+const HIT_SFX={hoops:"swish",punch:"thud",balloons:"pop",keeper:"save",gremlin:"bonk"};
 
 const TYPES={
   food:  {ico:"🍕",name:"Food"},
@@ -686,21 +733,74 @@ function buildShareCard(){
   c.fillText("THE KILL CYCLE™ — Catch it. Crush it. Count it.",540,1295);
   return {cv,big,cap};
 }
-async function shareProgress(){
-  try{await document.fonts.load("64px Bungee");await document.fonts.load("700 34px Rubik");}catch(e){}
-  const card=buildShareCard();
-  if(!card)return;
-  card.cv.toBlob(async b=>{
-    const file=new File([b],"cravings-killer-progress.png",{type:"image/png"});
-    const text=`${card.big} ${card.cap.toLowerCase()} 📉 — Cravings Killer`;
+function shareBlob(cv,name,text){
+  cv.toBlob(async b=>{
+    const file=new File([b],name,{type:"image/png"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       try{await navigator.share({files:[file],text});return;}
       catch(e){if(e.name==="AbortError")return;}
     }
     const a=document.createElement("a");
-    a.href=URL.createObjectURL(b);a.download="cravings-killer-progress.png";
+    a.href=URL.createObjectURL(b);a.download=name;
     document.body.appendChild(a);a.click();a.remove();
   },"image/png");
+}
+async function shareProgress(){
+  try{await document.fonts.load("64px Bungee");await document.fonts.load("700 34px Rubik");}catch(e){}
+  const card=buildShareCard();
+  if(!card)return;
+  shareBlob(card.cv,"cravings-killer-progress.png",`${card.big} ${card.cap.toLowerCase()} 📉 — Cravings Killer`);
+}
+
+/* ---------- session share card ("share this kill") ---------- */
+const markImg=new Image();markImg.src="brand-mark.png";
+btnShareKill.addEventListener("click",()=>{buzz(15);shareKill();});
+async function shareKill(){
+  if(before==null||after==null)return;
+  try{await document.fonts.load("64px Bungee");await document.fonts.load("700 34px Rubik");await document.fonts.ready;}catch(e){}
+  const cv=document.createElement("canvas");cv.width=1080;cv.height=1350;
+  const c=cv.getContext("2d");
+  c.fillStyle="#0d1413";c.fillRect(0,0,1080,1350);
+  c.strokeStyle="#1f2e2b";c.lineWidth=3;
+  c.beginPath();c.arc(540,-280,660,0,Math.PI*2);c.stroke();
+  c.beginPath();c.arc(540,1660,660,0,Math.PI*2);c.stroke();
+  if(markImg.complete&&markImg.naturalWidth)c.drawImage(markImg,470,60,140,140);
+  c.font="58px Bungee";c.textAlign="left";
+  const t1="CRAVINGS ",t2="KILLER";
+  const w1=c.measureText(t1).width,w2=c.measureText(t2).width;
+  const tx=(1080-w1-w2)/2;
+  c.fillStyle="#f4ecdd";c.fillText(t1,tx,290);
+  c.fillStyle="#a3e635";c.fillText(t2,tx+w1,290);
+
+  c.textAlign="center";
+  c.font="250px Bungee";
+  const bw=c.measureText(String(before)).width, aw=c.measureText(String(after)).width;
+  c.font="120px Bungee";const arw=c.measureText("➜").width;
+  const gap=60, total=bw+gap+arw+gap+aw;
+  let x=(1080-total)/2;
+  c.textAlign="left";
+  c.font="250px Bungee";c.fillStyle="#ff5d5d";c.fillText(String(before),x,720);x+=bw+gap;
+  c.font="120px Bungee";c.fillStyle="#b9b2a3";c.fillText("➜",x,690);x+=arw+gap;
+  c.font="250px Bungee";c.fillStyle="#3df0b0";
+  c.shadowColor="rgba(61,240,176,.4)";c.shadowBlur=50;
+  c.fillText(String(after),x,720);c.shadowBlur=0;
+
+  c.textAlign="center";
+  c.font="700 30px Rubik";c.fillStyle="#b9b2a3";
+  c.fillText("CRAVING INTENSITY — BEFORE ➜ AFTER",540,800);
+
+  c.font="46px Bungee";c.fillStyle="#ffc94d";
+  const line=mode==="surf"
+    ? `🌊 RODE IT OUT — ${fmtSurf(SURF_SECONDS-Math.max(0,surfLeft))}`
+    : battle
+      ? `⚡ KO IN ${lastKO.toFixed(1)}S`
+      : `${GAMES[gameId].ico} ${score} ${GAMES[gameId].unit.toUpperCase()} IN 60 SECONDS`;
+  c.fillText(line,540,940);
+  if(S.streak>1){c.font="700 32px Rubik";c.fillStyle="#f4ecdd";c.fillText(`🔥 ${S.streak}-day streak and counting`,540,1030);}
+
+  c.font="700 26px Rubik";c.fillStyle="#b9b2a3";
+  c.fillText("THE KILL CYCLE™ — Catch it. Crush it. Count it.",540,1295);
+  shareBlob(cv,"craving-killed.png",`Craving crushed: ${before} → ${after} in 60 seconds 🥊 — Cravings Killer`);
 }
 
 /* ---------- craving type + trigger chips ---------- */
@@ -773,6 +873,8 @@ function addScore(x,y){
   p.className="pop"+(combo?" combo":"");p.textContent=combo?`COMBO ×${score}!`:"+1";
   p.style.left=x+"px";p.style.top=y+"px";
   court.appendChild(p);setTimeout(()=>p.remove(),650);
+  SFX[HIT_SFX[gameId]]();
+  if(combo)SFX.combo();
   if(battle&&running){
     const tgt=GAMES[gameId].koTarget;
     tbarFill.style.transform=`scaleX(${Math.max(0,1-score/tgt)})`;
@@ -788,7 +890,7 @@ function koWin(){
   if(koRecord){S.bestKO[gameId]=lastKO;save();}
   koTime.textContent=lastKO.toFixed(1)+"s";
   koFlash.style.display="flex";
-  buzz([60,50,60,50,120]);
+  buzz([60,50,60,50,120]);SFX.ko();
   setTimeout(()=>{koFlash.style.display="none";show("screen-rateAfter");},1400);
 }
 function cue(){
@@ -810,7 +912,7 @@ function tap(side){
   if(side!==activeSide){
     (side==="L"?zoneL:zoneR).classList.add("flash-bad");
     setTimeout(()=>{zoneL.classList.remove("flash-bad");zoneR.classList.remove("flash-bad");},240);
-    buzz(60);return;
+    buzz(60);SFX.wrong();return;
   }
   GAMES[gameId].onTap();
 }
@@ -1076,10 +1178,11 @@ function startRound(){
   GAMES[gameId].init();cue();
   cdWhy.textContent=S.why?"🎯 "+S.why:"";
   countdown.style.display="flex";
-  let n=3;cdNum.textContent=n;
+  let n=3;cdNum.textContent=n;SFX.tick();
   cdTimer=setInterval(()=>{
     n--;
-    if(n===0){cdNum.textContent=battle?"FIGHT!":"GO!";}
+    if(n===0){cdNum.textContent=battle?"FIGHT!":"GO!";SFX.go();}
+    else if(n>0)SFX.tick();
     else if(n<0){
       clearInterval(cdTimer);countdown.style.display="none";
       running=true;busy=false;GAMES[gameId].start();cue();runClock();
@@ -1187,7 +1290,8 @@ function finishSession(){
     "It didn't budge this time — that's still data, and you still didn't give in. Drink a glass of water, take a 2-minute walk, try another game, or ride it out with a surf.";
   resMile.innerHTML=fresh.map(m=>`<div class="toast-mile">${m.ico} Milestone unlocked: ${m.lbl}</div>`).join("");
   show("screen-result");
-  if(won)confetti();
+  if(won){confetti();SFX.win();}
+  if(fresh.length)SFX.chime();
 }
 btnAgain.addEventListener("click",()=>{mode="game";before=null;after=null;show("screen-rate");});
 btnBuddy.addEventListener("click",async()=>{
@@ -1213,6 +1317,8 @@ function confetti(){
 }
 if(GAMES[S.lastGame])gameId=S.lastGame;
 renderPicker();
+btnMute.textContent=S.muted?"🔇":"🔊";
+btnMute.addEventListener("click",()=>{S.muted=!S.muted;save();btnMute.textContent=S.muted?"🔇":"🔊";if(!S.muted)SFX.pop();buzz(12);});
 if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
