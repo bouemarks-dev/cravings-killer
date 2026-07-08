@@ -144,6 +144,20 @@ h1 .killer{color:var(--acc)}
 .chip.sel{border-color:var(--acc);color:var(--cream);background:linear-gradient(160deg,#1a2311,#12170c)}
 .chip:active{transform:scale(.94)}
 .chip.sm{padding:7px 11px;font-size:12px}
+.rstep{display:none}
+.rstep.active{display:block;animation:stepin .22s ease}
+@keyframes stepin{from{opacity:0;transform:translateX(26px)}to{opacity:1;transform:none}}
+.step-cap{font-size:10px;letter-spacing:2.2px;font-weight:700;color:var(--cream-dim);margin:2vh 0 8px}
+.opt-card{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--ink-2);border:1.5px solid var(--line);border-radius:18px;
+  padding:16px 18px;margin-bottom:10px;color:var(--cream);
+  font-family:'Rubik';font-weight:700;font-size:16px;cursor:pointer;
+  transition:transform .06s,border-color .12s;
+}
+.opt-card .o-ico{font-size:26px;flex:none}
+.opt-card:active{transform:scale(.97)}
+.opt-card.sel{border-color:var(--acc);background:linear-gradient(160deg,#1a2311,#12170c)}
 .fact-line{
   border-left:3px solid var(--red);padding:8px 12px;margin:2px 0 16px;
   font-size:12.5px;line-height:1.5;color:var(--cream-dim);
@@ -411,18 +425,28 @@ h1 .killer{color:var(--acc)}
     <button class="back-link" id="btnWhySkip">Skip for now</button>
   </section>
 
-  <!-- RATE BEFORE -->
+  <!-- RATE BEFORE (3-step wizard) -->
   <section id="screen-rate">
-    <h2 class="display rate-head">WHAT'S CALLING YOU?</h2>
-    <div class="chips" id="typeChips"></div>
-    <p class="fact-line" id="rateFact"></p>
-    <div class="mile-h">What triggered it? (optional)</div>
-    <div class="chips" id="trigChips"></div>
-    <h2 class="display rate-head" style="margin-top:0;font-size:clamp(18px,5.4vw,24px)">HOW BAD IS IT RIGHT NOW?</h2>
-    <p class="rate-sub">Gut answer. 0 = nothing, 10 = unbearable.</p>
-    <div class="scale" id="scaleBefore"></div>
-    <div class="scale-caps"><span>😌 Meh</span><span>Unbearable 🥵</span></div>
-    <button class="back-link" data-nav="screen-home">← Back</button>
+    <div class="rstep" id="rstep1">
+      <div class="step-cap">STEP 1 OF 3</div>
+      <h2 class="display rate-head">WHAT'S<br>CALLING YOU?</h2>
+      <div id="typeCards"></div>
+    </div>
+    <div class="rstep" id="rstep2">
+      <div class="step-cap">STEP 2 OF 3 · OPTIONAL</div>
+      <h2 class="display rate-head">WHAT<br>TRIGGERED IT?</h2>
+      <div id="trigCards"></div>
+      <button class="ghost-btn" id="btnTrigSkip">NOT SURE — SKIP →</button>
+    </div>
+    <div class="rstep" id="rstep3">
+      <div class="step-cap">STEP 3 OF 3</div>
+      <h2 class="display rate-head">HOW BAD IS IT<br>RIGHT NOW?</h2>
+      <p class="rate-sub">Gut answer. 0 = nothing, 10 = unbearable.</p>
+      <div class="scale" id="scaleBefore"></div>
+      <div class="scale-caps"><span>😌 Meh</span><span>Unbearable 🥵</span></div>
+      <p class="fact-line" id="rateFact" style="margin-top:18px"></p>
+    </div>
+    <button class="back-link" id="rateBack">← Back</button>
   </section>
 
   <!-- GAME PICKER -->
@@ -675,7 +699,7 @@ const show=id=>{
   document.getElementById(id).classList.add("active");
   if(id==="screen-pick")renderPicker();
   if(id==="screen-insights")renderInsights();
-  if(id==="screen-rate"){curTrigger=null;renderTriggers();showFact();}
+  if(id==="screen-rate"){curTrigger=null;setRateStep(1);}
 };
 function showFact(){rateFact.innerHTML="<b>☠️ FACT</b><br>"+randFact(curType);}
 document.querySelectorAll("[data-nav]").forEach(b=>b.addEventListener("click",()=>{show(b.dataset.nav);if(b.dataset.nav==="screen-home")renderHome();}));
@@ -912,22 +936,36 @@ async function shareKill(){
   shareBlob(cv,"craving-killed.png",`Craving crushed: ${before} → ${after} in 60 seconds 🥊 — Cravings Killer`);
 }
 
-/* ---------- craving type + trigger chips ---------- */
-let curType=S.lastType, curTrigger=null;
-function renderChips(){
-  typeChips.innerHTML=Object.entries(TYPES).map(([k,t])=>
-    `<button class="chip ${k===curType?"sel":""}" data-type="${k}">${t.ico} ${t.name}</button>`).join("");
-  typeChips.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{curType=c.dataset.type;S.lastType=curType;save();buzz(12);renderChips();showFact();}));
-}
-renderChips();
-function renderTriggers(){
-  trigChips.innerHTML=Object.entries(TRIGGERS).map(([k,t])=>
-    `<button class="chip sm ${k===curTrigger?"sel":""}" data-trig="${k}">${t.ico} ${t.name}</button>`).join("");
-  trigChips.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
-    curTrigger=curTrigger===c.dataset.trig?null:c.dataset.trig;buzz(12);renderTriggers();
+/* ---------- rate wizard: type → trigger → intensity ---------- */
+let curType=S.lastType, curTrigger=null, rateStep=1;
+function renderTypeCards(){
+  typeCards.innerHTML=Object.entries(TYPES).map(([k,t])=>
+    `<button class="opt-card ${k===curType?"sel":""}" data-type="${k}"><span class="o-ico">${t.ico}</span>${t.name}</button>`).join("");
+  typeCards.querySelectorAll(".opt-card").forEach(c=>c.addEventListener("click",()=>{
+    curType=c.dataset.type;S.lastType=curType;save();buzz(12);renderTypeCards();
+    setTimeout(()=>setRateStep(2),150);
   }));
 }
-renderTriggers();
+function renderTrigCards(){
+  trigCards.innerHTML=Object.entries(TRIGGERS).map(([k,t])=>
+    `<button class="opt-card ${k===curTrigger?"sel":""}" data-trig="${k}"><span class="o-ico">${t.ico}</span>${t.name}</button>`).join("");
+  trigCards.querySelectorAll(".opt-card").forEach(c=>c.addEventListener("click",()=>{
+    curTrigger=c.dataset.trig;buzz(12);renderTrigCards();
+    setTimeout(()=>setRateStep(3),150);
+  }));
+}
+function setRateStep(n){
+  rateStep=n;
+  [rstep1,rstep2,rstep3].forEach((el,i)=>el.classList.toggle("active",i===n-1));
+  if(n===1)renderTypeCards();
+  if(n===2)renderTrigCards();
+  if(n===3)showFact();
+}
+btnTrigSkip.addEventListener("click",()=>{curTrigger=null;buzz(12);setRateStep(3);});
+rateBack.addEventListener("click",()=>{
+  if(rateStep>1)setRateStep(rateStep-1);
+  else{show("screen-home");renderHome();}
+});
 
 /* ---------- my why ---------- */
 let whyReturn="screen-home";
@@ -1272,7 +1310,7 @@ pinball:{
       {x:W*.84,y:H*.58,r:W*.055,e:"⚡",c:cols[4],last:0,pulse:0},
     ];
     const mkFlip=(px,dir)=>{
-      const f={px,py:H*.862,dir,len:W*.115,rad:7.5,rest:32*RAD,flipA:-34*RAD,phase:0,t0:0,th:32*RAD,thW:0,prevW:0,omega:0};
+      const f={px,py:H*.862,dir,len:W*.095,rad:5.5,rest:32*RAD,flipA:-34*RAD,phase:0,t0:0,th:32*RAD,thW:0,prevW:0,omega:0};
       f.thW=dir===1?f.th:Math.PI-f.th;f.prevW=f.thW;
       return f;
     };
@@ -1467,7 +1505,7 @@ function startRound(){
   cdTimer=setInterval(()=>{
     n--;
     if(n===0){cdNum.textContent=battle?"FIGHT!":"GO!";SFX.go();}
-    else if(n>0)SFX.tick();
+    else if(n>0){cdNum.textContent=n;SFX.tick();}
     else if(n<0){
       clearInterval(cdTimer);countdown.style.display="none";
       running=true;busy=false;GAMES[gameId].start();cue();runClock();
