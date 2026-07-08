@@ -1338,6 +1338,8 @@ pinball:{
       return f;
     };
     this.fL=mkFlip(W*.37,1);this.fR=mkFlip(W*.63,-1);
+    this.rampRad=Math.max(10,this.r*.9); /* thicker than flippers so the ball rolls, never wedges */
+    this.ramps=[{ax:0,ay:H*.70,bx:W*.37,by:H*.862},{ax:W,ay:H*.70,bx:W*.63,by:H*.862}];
     this.ball=null;this.spawnT=null;
     this.machine=(TYPES[curType]?TYPES[curType].name.split(" ")[0].toUpperCase():"CRAVING")+" MACHINE";
     this.draw();
@@ -1347,12 +1349,6 @@ pinball:{
     this.spawnT=setTimeout(()=>{ if(!running)return;
       this.ball={x:this.W*(.35+Math.random()*.3),y:this.H*.10,vx:(Math.random()*4-2)*this.u,vy:0};
     },delay||0);
-  },
-  rampY(x){
-    const W=this.W,H=this.H;
-    if(x<W*.37)return H*.70+(x/(W*.37))*(H*.162);
-    if(x>W*.63)return H*.70+((W-x)/(W*.37))*(H*.162);
-    return H*2; /* drain gap — flippers are the only floor here */
   },
   updateFlip(f,now){
     f.prevW=f.thW;
@@ -1378,6 +1374,18 @@ pinball:{
     const dot=rvx*nx+rvy*ny;
     if(dot<0){const e=.7;rvx-=(1+e)*dot*nx;rvy-=(1+e)*dot*ny;}
     b.vx=rvx+sx;b.vy=rvy+sy;
+  },
+  collideRamp(s,b){
+    const vx=s.bx-s.ax,vy=s.by-s.ay,L2=vx*vx+vy*vy||1;
+    let t=((b.x-s.ax)*vx+(b.y-s.ay)*vy)/L2;t=Math.max(0,Math.min(1,t));
+    const cx=s.ax+vx*t,cy=s.ay+vy*t;
+    let nx=b.x-cx,ny=b.y-cy;const d=Math.hypot(nx,ny)||.001;
+    const minD=this.r+this.rampRad;
+    if(d>=minD)return;
+    nx/=d;ny/=d;
+    b.x=cx+nx*minD;b.y=cy+ny*minD;
+    const dot=b.vx*nx+b.vy*ny;
+    if(dot<0){const e=.2;b.vx-=(1+e)*dot*nx;b.vy-=(1+e)*dot*ny;} /* low bounce = rolls down slope */
   },
   start(){
     zoneL.classList.add("go");zoneR.classList.add("go");
@@ -1410,12 +1418,8 @@ pinball:{
           });
           self.collideFlipper(self.fL,b);
           self.collideFlipper(self.fR,b);
-          const ry=self.rampY(b.x);
-          if(b.y>ry-self.r&&b.y<self.H){
-            b.y=ry-self.r;
-            b.vy=-Math.abs(b.vy)*.3;
-            b.vx+=(b.x<self.W*.5?1:-1)*.14*self.u;
-          }
+          self.collideRamp(self.ramps[0],b);
+          self.collideRamp(self.ramps[1],b);
         }
         b.vx*=.999;b.vy*=.999;
         const cap=15*self.u,sp=Math.hypot(b.vx,b.vy);
@@ -1448,10 +1452,9 @@ pinball:{
     c.beginPath();c.moveTo(W/2,0);c.lineTo(W/2,H*.5);c.stroke();c.setLineDash([]);
     c.font="700 11px Rubik";c.fillStyle="#b9b2a3";c.textAlign="center";
     c.fillText("— "+this.machine+" —",W/2,18);
-    /* ramps */
-    c.strokeStyle="#3c4f4a";c.lineWidth=4;c.lineCap="round";
-    c.beginPath();c.moveTo(0,H*.70);c.lineTo(W*.37,H*.862);c.stroke();
-    c.beginPath();c.moveTo(W,H*.70);c.lineTo(W*.63,H*.862);c.stroke();
+    /* ramps — drawn as thick as their collision body */
+    c.strokeStyle="#3c4f4a";c.lineWidth=this.rampRad*2;c.lineCap="round";
+    this.ramps.forEach(s=>{c.beginPath();c.moveTo(s.ax,s.ay);c.lineTo(s.bx,s.by);c.stroke();});
     /* flippers */
     [this.fL,this.fR].forEach(f=>{
       c.save();c.translate(f.px,f.py);c.rotate(f.thW);
