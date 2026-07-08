@@ -458,7 +458,7 @@ h1 .killer{color:var(--acc)}
   <!-- GAME PICKER -->
   <section id="screen-pick">
     <h2 class="display pick-head">PICK YOUR WEAPON</h2>
-    <p class="rate-sub">Same medicine, different flavour. All two-thumb.</p>
+    <p class="rate-sub">All two-thumb, all stakes: one miss and your score resets. Lock in.</p>
     <div class="mode-seg">
       <button class="mode-btn" id="modeRush">⏱ 60-SEC RUSH<small>Score as much as you can</small></button>
       <button class="mode-btn" id="modeKO">🥊 KO MODE<small>Drain the bar. Beat your time.</small></button>
@@ -1049,6 +1049,16 @@ function koWin(){
   buzz([60,50,60,50,120]);SFX.ko();
   setTimeout(()=>{koFlash.style.display="none";show("screen-rateAfter");},1400);
 }
+function missReset(){
+  if(!running)return;
+  SFX.wrong();buzz(60);
+  if(score>0){
+    score=0;hudScore.textContent=0;
+    if(battle)tbarFill.style.transform="scaleX(1)";
+    const r=arena.getBoundingClientRect();
+    popFx(r.width/2,r.height*.45,"MISS! BACK TO 0","pop drainpop");
+  }
+}
 function cue(){
   const g=GAMES[gameId];
   document.querySelector("#zoneL .cue-lbl").textContent=g.cueL;
@@ -1070,7 +1080,7 @@ function tap(side){
   if(side!==activeSide){
     (side==="L"?zoneL:zoneR).classList.add("flash-bad");
     setTimeout(()=>{zoneL.classList.remove("flash-bad");zoneR.classList.remove("flash-bad");},240);
-    buzz(60);SFX.wrong();return;
+    missReset();return;
   }
   GAMES[gameId].onTap();
 }
@@ -1199,7 +1209,7 @@ balloons:{
     this.next(pickSide(activeSide),240);
   },
   escape(){
-    if(this.b){const el=this.b;el.classList.add("gone");setTimeout(()=>el.remove(),320);this.b=null;}
+    if(this.b){const el=this.b;el.classList.add("gone");setTimeout(()=>el.remove(),320);this.b=null;missReset();}
     this.next(pickSide(activeSide),240);
   },
   stop(){clearTimeout(this.t);clearTimeout(this.esc);if(this.b){this.b.remove();this.b=null;}}
@@ -1257,6 +1267,7 @@ keeper:{
   miss(side){
     this.flying=false;
     this.goal.classList.add("rip");setTimeout(()=>this.goal.classList.remove("rip"),300);
+    missReset();
     this.shot(pickSide(side),420);
   },
   stop(){clearTimeout(this.t);cancelAnimationFrame(this.raf2);this.flying=false;}
@@ -1281,7 +1292,7 @@ gremlin:{
       const g=side==="L"?this.gL:this.gR;
       g.classList.add("up");cue();
       const win=Math.max(520,1250-score*18);
-      this.hide=setTimeout(()=>{g.classList.remove("up");this.popup(pickSide(side),260);},win);
+      this.hide=setTimeout(()=>{g.classList.remove("up");missReset();this.popup(pickSide(side),260);},win);
     },delay);
   },
   onTap(){
