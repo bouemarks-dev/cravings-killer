@@ -1332,13 +1332,14 @@ pinball:{
       {x:W*.16,y:H*.58,r:W*.055,e:"⚡",c:cols[3],last:0,pulse:0},
       {x:W*.84,y:H*.58,r:W*.055,e:"⚡",c:cols[4],last:0,pulse:0},
     ];
+    this.rampRad=Math.max(10,this.r*.95);
+    const FR=this.rampRad; /* flippers share the ramp thickness — flush junction, no ledge, no gap */
     const mkFlip=(px,dir)=>{
-      const f={px,py:H*.862,dir,len:W*.095,rad:5.5,rest:32*RAD,flipA:-34*RAD,phase:0,t0:0,th:32*RAD,thW:0,prevW:0,omega:0};
+      const f={px,py:H*.862,dir,len:W*.058,rad:FR,rest:30*RAD,flipA:-38*RAD,phase:0,t0:0,th:30*RAD,thW:0,prevW:0,omega:0};
       f.thW=dir===1?f.th:Math.PI-f.th;f.prevW=f.thW;
       return f;
     };
     this.fL=mkFlip(W*.37,1);this.fR=mkFlip(W*.63,-1);
-    this.rampRad=Math.max(10,this.r*.9); /* thicker than flippers so the ball rolls, never wedges */
     this.ramps=[{ax:0,ay:H*.70,bx:W*.37,by:H*.862},{ax:W,ay:H*.70,bx:W*.63,by:H*.862}];
     this.ball=null;this.spawnT=null;
     this.machine=(TYPES[curType]?TYPES[curType].name.split(" ")[0].toUpperCase():"CRAVING")+" MACHINE";
