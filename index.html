@@ -201,9 +201,10 @@ h1 .killer{color:var(--acc)}
 .gcard .g-tag{color:var(--cream-dim);font-size:12.5px;margin-top:3px}
 .gcard .g-last{margin-left:auto;font-size:9px;letter-spacing:1.5px;color:var(--gold);border:1px solid rgba(255,201,77,.4);border-radius:999px;padding:4px 8px;white-space:nowrap}
 .dice-btn{display:block;width:100%;background:none;border:1.5px dashed var(--line);color:var(--cream-dim);font-family:'Bungee';font-size:14px;border-radius:20px;padding:15px;cursor:pointer;margin-top:12px}
-.mode-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 6px}
-.mode-btn{font-family:'Bungee';font-size:12.5px;padding:13px 6px;border-radius:14px;background:var(--ink-2);border:1.5px solid var(--line);color:var(--cream-dim);cursor:pointer}
-.mode-btn small{display:block;font-family:'Rubik';font-weight:700;font-size:10px;margin-top:4px;opacity:.7;letter-spacing:.5px}
+.mode-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:2px 0 6px}
+.mode-btn{font-family:'Bungee';font-size:11px;padding:12px 3px;border-radius:14px;background:var(--ink-2);border:1.5px solid var(--line);color:var(--cream-dim);cursor:pointer}
+.mode-btn small{display:block;font-family:'Rubik';font-weight:700;font-size:9px;margin-top:4px;opacity:.7;letter-spacing:.4px}
+.mode-btn.hc.sel{border-color:var(--red);background:linear-gradient(160deg,#241113,#161011)}
 .mode-btn.sel{border-color:var(--acc);color:var(--cream);background:linear-gradient(160deg,#1a2311,#12170c)}
 .mode-btn:active{transform:scale(.97)}
 .g-ko{font-size:10.5px;color:var(--gold);margin-top:3px;font-weight:700}
@@ -458,10 +459,11 @@ h1 .killer{color:var(--acc)}
   <!-- GAME PICKER -->
   <section id="screen-pick">
     <h2 class="display pick-head">PICK YOUR WEAPON</h2>
-    <p class="rate-sub">All two-thumb, all stakes: one miss and your score resets. Lock in.</p>
+    <p class="rate-sub">All two-thumb. Pick your mode, pick your weapon.</p>
     <div class="mode-seg">
-      <button class="mode-btn" id="modeRush">⏱ 60-SEC RUSH<small>Score as much as you can</small></button>
-      <button class="mode-btn" id="modeKO">🥊 KO MODE<small>Drain the bar. Beat your time.</small></button>
+      <button class="mode-btn" id="modeRush">⏱ RUSH<small>60s · score big</small></button>
+      <button class="mode-btn" id="modeKO">🥊 KO<small>Beat your time</small></button>
+      <button class="mode-btn hc" id="modeHC">💀 HARDCORE<small>Miss = zero</small></button>
     </div>
     <div id="gcards"></div>
     <button class="dice-btn" id="btnDice">🎲 SURPRISE ME</button>
@@ -557,9 +559,10 @@ h1 .killer{color:var(--acc)}
 "use strict";
 /* ---------- state & storage ---------- */
 const KEY="cravingsKiller.v1";
-const S = Object.assign({streak:0,lastDay:null,crushed:0,surfed:0,sessions:0,best:{},bestKO:{},milestones:[],log:[],lastType:"food",lastGame:"hoops",why:"",whyAsked:false,koMode:false,muted:false},
+const S = Object.assign({streak:0,lastDay:null,crushed:0,surfed:0,sessions:0,best:{},bestKO:{},bestHC:{},milestones:[],log:[],lastType:"food",lastGame:"hoops",why:"",whyAsked:false,koMode:false,playMode:"rush",muted:false},
   JSON.parse(localStorage.getItem(KEY)||"{}"));
 if(typeof S.best==="number") S.best={hoops:S.best};       /* migrate v1 numeric best */
+if(S.koMode&&S.playMode==="rush") S.playMode="ko";        /* migrate koMode boolean */
 const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
 const today=()=>new Date().toISOString().slice(0,10);
 const buzz=ms=>{ if(navigator.vibrate) navigator.vibrate(ms); };
@@ -1013,7 +1016,7 @@ btnSurfHome.addEventListener("click",()=>{mode="surf";buzz(15);(!S.why&&!S.whyAs
 const GAME_SECONDS=60;
 let score=0, timeLeft=GAME_SECONDS, activeSide="L", busy=false, running=false;
 let raf=null, tick=null, cdTimer=null, gameId="hoops";
-let battle=false, koT0=0, lastKO=0, koRecord=false;
+let battle=false, hardcore=false, koT0=0, lastKO=0, koRecord=false;
 const court=document.getElementById("court"), arena=document.getElementById("arena");
 
 function px(p){const r=arena.getBoundingClientRect();return{x:p.x*r.width,y:p.y*r.height};}
@@ -1052,9 +1055,9 @@ function koWin(){
 function missReset(){
   if(!running)return;
   SFX.wrong();buzz(60);
+  if(!hardcore)return; /* stakes only bite in HARDCORE mode */
   if(score>0){
     score=0;hudScore.textContent=0;
-    if(battle)tbarFill.style.transform="scaleX(1)";
     const r=arena.getBoundingClientRect();
     popFx(r.width/2,r.height*.45,"MISS! BACK TO 0","pop drainpop");
   }
@@ -1484,12 +1487,15 @@ pinball:{
 
 /* ---------- game picker ---------- */
 function renderPicker(){
-  modeRush.classList.toggle("sel",!S.koMode);
-  modeKO.classList.toggle("sel",!!S.koMode);
+  modeRush.classList.toggle("sel",S.playMode==="rush");
+  modeKO.classList.toggle("sel",S.playMode==="ko");
+  modeHC.classList.toggle("sel",S.playMode==="hardcore");
   gcards.innerHTML=Object.entries(GAMES).map(([id,g])=>{
-    const best=S.koMode
+    const best=S.playMode==="ko"
       ? (S.bestKO[id]?`⚡ Best KO: ${S.bestKO[id].toFixed(1)}s — beat it`:`🥊 KO target: ${g.koTarget} ${g.unit}`)
-      : (S.best[id]?`🏆 Best: ${S.best[id]} ${g.unit}`:"");
+      : S.playMode==="hardcore"
+        ? (S.bestHC[id]?`💀 Hardcore best: ${S.bestHC[id]} ${g.unit}`:"💀 One miss = back to zero")
+        : (S.best[id]?`🏆 Best: ${S.best[id]} ${g.unit}`:"");
     return `<button class="gcard" data-game="${id}">
        <span class="g-ico">${g.ico}</span>
        <span><span class="g-name">${g.title}</span><div class="g-tag">${g.tag}</div>${best?`<div class="g-ko">${best}</div>`:""}</span>
@@ -1498,14 +1504,18 @@ function renderPicker(){
   }).join("");
   gcards.querySelectorAll(".gcard").forEach(c=>c.addEventListener("click",()=>{buzz(15);launch(c.dataset.game);}));
 }
-modeRush.addEventListener("click",()=>{S.koMode=false;save();buzz(12);renderPicker();});
-modeKO.addEventListener("click",()=>{S.koMode=true;save();buzz(12);renderPicker();});
+const setPlayMode=m=>{S.playMode=m;S.koMode=m==="ko";save();buzz(12);renderPicker();};
+modeRush.addEventListener("click",()=>setPlayMode("rush"));
+modeKO.addEventListener("click",()=>setPlayMode("ko"));
+modeHC.addEventListener("click",()=>setPlayMode("hardcore"));
 btnDice.addEventListener("click",()=>{
   const ids=Object.keys(GAMES);
   launch(ids[Math.floor(Math.random()*ids.length)]);
 });
 function launch(id){
-  gameId=id;S.lastGame=id;battle=!!S.koMode;save();
+  gameId=id;S.lastGame=id;
+  battle=S.playMode==="ko";hardcore=S.playMode==="hardcore";
+  save();
   startRound();
 }
 
@@ -1552,7 +1562,8 @@ function endRound(){
   running=false;GAMES[gameId].stop();cancelAnimationFrame(raf);
   zoneL.classList.remove("go");zoneR.classList.remove("go");
   buzz([50,60,50]);
-  if(score>(S.best[gameId]||0)){S.best[gameId]=score;save();}
+  const book=hardcore?S.bestHC:S.best;
+  if(score>(book[gameId]||0)){book[gameId]=score;save();}
   show("screen-rateAfter");
 }
 
@@ -1624,7 +1635,9 @@ function finishSession(){
     ? `🌊 You rode the wave for ${fmtSurf(SURF_SECONDS-Math.max(0,surfLeft))}`
     : battle
       ? `⚡ KO in ${lastKO.toFixed(1)}s ${koRecord?"— NEW RECORD! 🏆":`(best ${(S.bestKO[gameId]||lastKO).toFixed(1)}s)`}`
-      : `${GAMES[gameId].ico} ${score} ${GAMES[gameId].unit} in 60 seconds`;
+      : hardcore
+        ? `💀 ${score} unbroken ${GAMES[gameId].unit} — HARDCORE`
+        : `${GAMES[gameId].ico} ${score} ${GAMES[gameId].unit} in 60 seconds`;
   resTitle.innerHTML=won?'CRAVING <span class="win">CRUSHED</span>':'YOU <span class="win">SHOWED UP</span>';
   const drop=before-after;
   resMsg.textContent=
